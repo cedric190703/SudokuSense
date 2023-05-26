@@ -1,0 +1,2 @@
+In this part I will make an AI that is able to recognize digits of size 28 x 28 pixels.
+This AI will be based on the CNN model to be able to recognize handwritten and handwritten digits. I will use Python libraries : NumPy, TensorFlow, Keras, Scikit-learn or also Pandas.
