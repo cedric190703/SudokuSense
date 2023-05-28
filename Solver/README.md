@@ -1,0 +1,1 @@
+In this part I will develop an algorithm that take a Sudoku grid in parameter and then resolve it using a Backtracking algorithm with Python.
