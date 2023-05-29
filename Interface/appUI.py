@@ -65,12 +65,12 @@ class App(ctk.CTk):
         self.home_frame.grid_columnconfigure(0, weight=1)
         self.home_frame.grid(row=0, column=1, padx=(0, 10), pady=(10, 0), sticky="nsew")
 
-        self.home_frame_large_image_label = ctk.CTkLabel(self.home_frame, image=self.sudoku_image)
+        self.home_frame_large_image_label = ctk.CTkLabel(self.home_frame, text="", image=self.sudoku_image)
         self.home_frame_large_image_label.grid(row=0, column=0, padx=20, pady=10)
 
         # Description of the process
         self.description = ctk.CTkTextbox(master=self, width=225, height=65, corner_radius=0)
-        self.description.insert("0.0", " Select an image and press the start button to process.")
+        self.description.insert("0.0", "   Import an image and then press the start button to process the selected image.")
         self.description.grid(row=7, column=0, padx=10, pady=10, sticky="ew", columnspan=2)
     
     # Function to handle the "Import" button press
