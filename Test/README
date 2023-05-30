@@ -1,1 +1,0 @@
-In this folder will be some images of Sudoku to test the project with them.

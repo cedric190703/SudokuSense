@@ -122,10 +122,11 @@ def extractDigits(transformed):
     return digitImages
 
 def mainProcessing(image_path):
+    print("IM HERE")
     digitImages = []
 
-    # Load the image
-    image = cv2.imread(image_path)
+    # Load the image from a PIL image
+    image = cv2.cvtColor(np.array(image_path), cv2.COLOR_RGB2BGR)
 
     # preprocess the image to get a binary image
     binary = processing(image)

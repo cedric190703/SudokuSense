@@ -1,1 +1,0 @@
-In this folder I will put all the datasets that I will use to train the model.

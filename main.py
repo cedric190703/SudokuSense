@@ -2,15 +2,14 @@ import sys
 
 # Import the paths to use the main functions
 sys.path.append('./Interface')
-sys.path.append('./ImageProcess')
-sys.path.append('./Results')
 
 from appUI import mainInterface
-from processing import mainProcessing
-from drawGrid import mainDraw
 
+# Call the main function in the interface directory
+# which is the function that handle the main process of the application
 def main():
-    pass
+    # First lunch the interface to get the Sudoku image
+    mainInterface()
  
 if __name__ == "__main__":
     main()
