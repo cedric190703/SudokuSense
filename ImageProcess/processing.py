@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import time
 
 def findGrid(binary):
     # Find the contours on the binary image
