@@ -1,27 +1,6 @@
 import cv2
 import numpy as np
 
-def findGrid(binary):
-    # Find the contours on the binary image
-    contours, _ = cv2.findContours(binary, 
-                                   cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Filter the contours based on their area
-    contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 1000]
-
-    # Sort the contours by area in descending order
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)
-
-    # Find the largest contour with 4 sides
-    for cnt in contours:
-        perimeter = cv2.arcLength(cnt, True)
-        approx = cv2.approxPolyDP(cnt, 0.02 * perimeter, True)
-        if len(approx) == 4:
-            return approx.reshape(4, 2)
-
-    # If no suitable contour is found, return None
-    return None
-
 # Function to normalized the points
 # Needed to the perspective transform
 def normalizedP(contours):
@@ -107,15 +86,9 @@ def extractDigits(transformed):
                 digitImages.append((image, i, j, 0))
     return digitImages
 
-def mainProcessing(binary):
+def mainProcessing(grid, binary):
     digitImages = []
-
-    # Try to find the Sudoku grid
-    grid = findGrid(binary)
-
     # To see the contous on the image
-    # cv2.drawContours(image, [grid], -1, (0, 255, 0), 2)
-    
     if(grid is not None):
         try:
             # Reshape the grid contour into the expected shape
@@ -143,8 +116,8 @@ def mainProcessing(binary):
 
         except Exception as e:
             # cv2.destroyAllWindows()
-            return (0, digitImages)
+            return (0, digitImages, inverted)
 
     # Destroy all the windows to liberate memory allocation
     # cv2.destroyAllWindows()
-    return (1, inverted)
+    return (1, digitImages, inverted)

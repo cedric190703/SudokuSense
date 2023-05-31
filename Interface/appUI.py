@@ -6,12 +6,15 @@ import cv2
 import numpy as np
 import time
 import threading
+import tensorflow as tf
 
 sys.path.append('./ImageProcess')
 sys.path.append('./Results')
+sys.path.append('./Solver')
 
-from processing import *
-from drawGrid import *
+from processing import mainProcessing
+from drawGrid import mainDraw
+from solver import mainSolver
 
 class App(ctk.CTk):
     def __init__(self):
@@ -126,7 +129,10 @@ class App(ctk.CTk):
         
         # Step to be situated in the process
         self.step = 0
-        
+
+        #Check if the Sudoku image have been imported
+        self.imported = 0
+
         # Main grid to complete at the end of the process
         self.grid = []
 
@@ -136,7 +142,7 @@ class App(ctk.CTk):
     # Function to get the binary image
     # First step of this entire part give a clean image (binary)
     def processing(self, image):
-
+        time.sleep(2)
         # Convert the image in a Grayscale image
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -161,10 +167,31 @@ class App(ctk.CTk):
 
         return binary
 
+    def findGrid(self, binary):
+        # Find the contours on the binary image
+        contours, _ = cv2.findContours(binary, 
+                                    cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Filter the contours based on their area
+        contours = [cnt for cnt in contours if cv2.contourArea(cnt) > 1000]
+
+        # Sort the contours by area in descending order
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
+
+        # Find the largest contour with 4 sides
+        for cnt in contours:
+            perimeter = cv2.arcLength(cnt, True)
+            approx = cv2.approxPolyDP(cnt, 0.02 * perimeter, True)
+            if len(approx) == 4:
+                return approx.reshape(4, 2)
+
+        # If no suitable contour is found, return None
+        return None
+    
     # Function to update the image instantly
     def update_image(self, image):
         # Create a new CTkImage object with the updated image
-        updated_sudoku_image = ctk.CTkImage(image, size=(500, 425))
+        updated_sudoku_image = ctk.CTkImage(image, size=(465, 415))
 
         # Update the image on the main frame
         self.home_frame_large_image_label.configure(image=updated_sudoku_image)
@@ -188,6 +215,8 @@ class App(ctk.CTk):
     # Function to handle the "Import" button press
     # For the image of the Sudoku in the right frame
     def importImage(self):
+        self.imported = 1
+
         # correct format of the Sudoku image
         f_types = [('Jpg Files', '*.jpg'), ('Png Files', '*.png')]
 
@@ -206,72 +235,119 @@ class App(ctk.CTk):
     
     # Function to get the solved grid
     def getResult(self):
-        # Check step code to see if the result is finished
-        if(self.step == 9):
-            # Create the final Sudoku image
-            image_path = "sudoku_completed.jpg"
+        # Create the final Sudoku image
+        image_path = "sudoku_completed.jpg"
 
-            # Call the main function to get the image result
-            mainDraw(self.grid)
+        self.update_text("The process is finished.")
 
-            # Open the final image
-            final_image = Image.open(image_path)
+        # Open the final image
+        final_image = Image.open(image_path)
 
-            self.update(final_image)
+        self.update_image(final_image)
+    
+    # Function that take images and create the Sudoku grid
+    def recognizeDigits(self, images):
+        grid = [[0 for _ in range(9)] for _ in range(9)]
+        L = len(images)
+
+        # Load the saved model
+        model = tf.keras.models.load_model('model.h5')
+
+        for i in range(L):
+            x = images[i][1]
+            y = images[i][2]
+            if images[i][3]:
+                # Resize and reshape the image
+                image = images[i][0]
+                image = Image.fromarray(image)
+                image = image.resize((28, 28))
+                image = np.array(image)
+                image = image.reshape(1, 28, 28, 1)
+                image = image / 255.0
+
+                # Perform prediction using the loaded model
+                prediction = model.predict(image)[0]
+                predicted_digit = np.argmax(prediction)
+
+                # Assign the predicted digit to the corresponding grid cell
+                grid[y][x] = predicted_digit
+        
+        return grid
     
     # Function that launches App
     def startApp(self):
-
+        if(not self.imported):
+            return
+        
         # Convert PIL image into openCV IMAGE
         image = cv2.cvtColor(np.array(self.sudoku_image._light_image.convert('RGB')),
         cv2.COLOR_RGB2BGR)
 
-        self.step += 1
         # First step of the application
         binary = self.processing(image)
         
         if(self.paused):
             return
-        
-        # Step 2 : Finding the grid
-        self.step += 1
 
-        # Step 2, 3 : Finding, cutting the Sudoku grid
-        # Step 4 : Apply the perspective transform on the image
-        # Start the image preprocessing before
-        (status, image) = mainProcessing(binary)
+        # Step 2 : finding the Sudoku grid
+        self.step = 5
+        
+        grid = []
+
+        try:
+            # Try to find the Sudoku grid
+            grid = self.findGrid(binary)
+        except:
+            self.update_text("An error occurs on the step: "+self.step)
+            return
+        
+        # Draw contours in the image
+        cv2.drawContours(image, [grid], -1, (0, 255, 0), 2)
+        self.update_text("Step2.0: Find the Sudoku grid.🔎")
+        self.update_image(self.convert_cv_PIL(image))
+        time.sleep(2)
+
+        if(self.paused):
+            return
+
+        # Step 3 : cut the Sudoku grid
+        (status, images, cut) = mainProcessing(grid, binary)
 
         # Check status
         if(status):
-            # Show the perspective 
-            self.update_text("step3: Show result.🎇")
-            self.update_image(self.convert_cv_PIL(image))
+            self.update_text("Step3.0: Cut the Sudoku grid.🔪")
+            self.update_image(self.convert_cv_PIL(cut))
             time.sleep(2)
 
             if(self.paused):
                 return
-        
-            # Step 5 : Recognize digits in the grid
-            self.step = 5
-            # TODO
 
+            # Step 4 : Recognize digits
+            self.update_text("Step4.0: Recognize digits.🤖")
+            grid = self.recognizeDigits(images)
+            time.sleep(2)
             
             if(self.paused):
                 return
         
-            # Step 6 : Solve grid
-            self.step += 1
-            # TODO
+            # Step 5 : Solve the Sudoku grid
+            self.update_text("Step5.0: Solve the Sudoku grid.👌")
+            result = mainSolver(grid)
             
             if(self.paused):
                 return
-        
-            # Step 7 : Show the result
-            # The user need to click on the button to show this step
-            self.step += 1
-            # TODO
+
+            # Step 6 : Show Result
+            # In this step the user need to press the button
+            if(result == -1):
+                self.update_text("Step6.0: Sudoku could not be solved.\n"
+                +"Click on the 'Result' button to see the grid recognized by the OCR.")
+                mainDraw(grid)
+            else :
+                self.update_text("Step6.0: Click on the 'Result' button to see the grid solved.💯")
+                mainDraw(result)
+
         else:
-            # Error in the processing of the image
             self.update_text("An error occurs on the step: "+self.step)
 
     # Function to pause App
