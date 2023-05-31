@@ -1,19 +1,6 @@
 import cv2
 import numpy as np
-
-# Function to get the binary image
-# First step of this entire part give a clean image (binary)
-def processing(image):
-    # Convert the image in a Grayscale image
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # Apply gaussian blur on the Grayscale image
-    blur = cv2.GaussianBlur(gray, (5,5), 0)
-
-    # Apply the threshold on the blur image
-    binary = cv2.adaptiveThreshold(blur, 255,
-                                cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 4)
-    return binary
+import time
 
 def findGrid(binary):
     # Find the contours on the binary image
@@ -121,15 +108,8 @@ def extractDigits(transformed):
                 digitImages.append((image, i, j, 0))
     return digitImages
 
-def mainProcessing(image_path):
-    print("IM HERE")
+def mainProcessing(binary):
     digitImages = []
-
-    # Load the image from a PIL image
-    image = cv2.cvtColor(np.array(image_path), cv2.COLOR_RGB2BGR)
-
-    # preprocess the image to get a binary image
-    binary = processing(image)
 
     # Try to find the Sudoku grid
     grid = findGrid(binary)
@@ -168,8 +148,4 @@ def mainProcessing(image_path):
 
     # Destroy all the windows to liberate memory allocation
     # cv2.destroyAllWindows()
-    return (1, digitImages)
-
-# Test the function here :
-"""image_path = 'PATH HERE'
-mainProcessing(image_path)"""
+    return (1, inverted)

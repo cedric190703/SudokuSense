@@ -46,7 +46,7 @@ def mainDraw(grid_result):
                         fill=(0, 0, 0))
 
     # Save the image with the completed Sudoku grid
-    image.save("./Results/image/sudoku_completed.jpg")
+    image.save("sudoku_completed.jpg")
 
 # Tests on the main function
 """grid_result = [
