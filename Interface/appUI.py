@@ -13,7 +13,7 @@ sys.path.append('./ImageProcess')
 sys.path.append('./Results')
 sys.path.append('./Solver')
 
-from processing import mainProcessing
+from processing import main_processing
 from drawGrid import mainDraw
 from solver import mainSolver
 
@@ -79,33 +79,33 @@ class App(ctk.CTk):
         # Import
         self.button_import = ctk.CTkButton(self.option_frame, text="Import ",
         image=self.import_icon, compound="left", fg_color="#23272d",
-        command=self.importImage)
+        command=self.import_image)
         self.button_import.grid(row=1, column=0, padx=2, pady=15)
 
         # Get result
         self.button_import = ctk.CTkButton(self.option_frame, text="Result  ",
         image=self.result_icon, compound="left", fg_color="#23272d",
-        command=self.getResult)
+        command=self.get_result)
         self.button_import.grid(row=2, column=0, padx=2, pady=15)
 
         # Play
         self.button_play = ctk.CTkButton(self.option_frame, text="Play     ",
-        image=self.play_icon, compound="left", fg_color="#23272d", command=self.startApp)
+        image=self.play_icon, compound="left", fg_color="#23272d", command=self.start_app)
         self.button_play.grid(row=3, column=0, padx=2, pady=15)
 
         # Pause
         self.button_restart = ctk.CTkButton(self.option_frame, text="Pause   ",
-        image=self.pause_icon, compound="left", fg_color="#23272d", command=self.pauseApp)
+        image=self.pause_icon, compound="left", fg_color="#23272d", command=self.pause_app)
         self.button_restart.grid(row=4, column=0, padx=2, pady=15)
 
         # Resume
         self.button_restart = ctk.CTkButton(self.option_frame, text="Resume",
-        image=self.resume_icon, compound="left", fg_color="#23272d", command=self.resumeApp)
+        image=self.resume_icon, compound="left", fg_color="#23272d", command=self.resume_app)
         self.button_restart.grid(row=5, column=0, padx=2, pady=15)
 
         # Restart
         self.button_pause = ctk.CTkButton(self.option_frame, text="Restart   ",
-        image=self.restart_icon, compound="left", fg_color="#23272d", command=self.restartApp)
+        image=self.restart_icon, compound="left", fg_color="#23272d", command=self.restart_app)
         self.button_pause.grid(row=6, column=0, padx=2, pady=15)
 
         # create home frame
@@ -171,7 +171,7 @@ class App(ctk.CTk):
 
         return binary
     
-    def findGrid(self, binary):
+    def find_grid(self, binary):
         # Find the contours on the binary image
         contours, _ = cv2.findContours(binary, 
                                     cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -218,7 +218,7 @@ class App(ctk.CTk):
     
     # Function to handle the "Import" button press
     # For the image of the Sudoku in the right frame
-    def importImage(self):
+    def import_image(self):
         self.imported = 1
 
         # correct format of the Sudoku image
@@ -238,7 +238,7 @@ class App(ctk.CTk):
         self.update_image(image)
     
     # Function to get the solved grid
-    def getResult(self):
+    def get_result(self):
         # Create the final Sudoku image
         image_path = "sudoku_completed.jpg"
 
@@ -254,7 +254,7 @@ class App(ctk.CTk):
         self.update_text("Step6.0: Sudoku could not be solved.")
 
     # Function that take images and create the Sudoku grid
-    def recognizeDigits(self, images):
+    def recognize_digits(self, images):
         grid = [[0 for _ in range(9)] for _ in range(9)]
         L = len(images)
         
@@ -282,7 +282,7 @@ class App(ctk.CTk):
         return grid
     
     # Function that launches App
-    def startApp(self):
+    def start_app(self):
         if(not self.imported):
             return
         
@@ -303,7 +303,7 @@ class App(ctk.CTk):
 
         try:
             # Try to find the Sudoku grid
-            grid = self.findGrid(binary)
+            grid = self.find_grid(binary)
         except:
             self.update_text("An error occurs on the step: "+self.step)
             return
@@ -318,7 +318,7 @@ class App(ctk.CTk):
             return
 
         # Step 3 : cut the Sudoku grid
-        (status, images, cut) = mainProcessing(grid, binary)
+        (status, images, cut) = main_processing(grid, binary)
 
         # Check status
         if(status):
@@ -331,7 +331,7 @@ class App(ctk.CTk):
 
             # Step 4 : Recognize digits
             self.update_text("Step4.0: Recognize digits.🤖")
-            grid = self.recognizeDigits(images)
+            grid = self.recognize_digits(images)
             print(grid)
             time.sleep(2)
             
@@ -377,27 +377,24 @@ class App(ctk.CTk):
                 mainDraw(result)
 
         else:
-            self.update_text("An error occurs on the step: "+self.step)
+            self.update_text("An error occurs in the process")
 
     # Function to pause App
-    def pauseApp(self):
+    def pause_app(self):
         self.paused = 1
 
     # Function to resume App
-    def resumeApp(self):
+    def resume_app(self):
         self.paused = 0
         threading.Thread(target=self.startApp).start()
 
     # Function to restart App
-    def restartApp(self):
+    def restart_app(self):
         self.paused = 1
         self.startApp()
 
 # Main function for the Tkinter UI interface
-def mainInterface():
+def main_interface():
     # Initialize a root windows for the interface
     app = App()
     app.mainloop()
-
-# Test the main function
-mainInterface()
