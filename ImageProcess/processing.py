@@ -75,8 +75,7 @@ def extractDigits(transformed):
                 if(0.4 * sized < imY2 < 0.8 * sized and
                     0.2 * sized <  imX2 < 0.8 * sized):
                     # Clean the digit image
-                    digitImage = image[imY1:imY1 + imY2,
-                                        imX1:imX1 + imX2]
+
                     digitImages.append((digitImage, i, j, 1))
                     found = 1
                     break
@@ -106,13 +105,6 @@ def mainProcessing(grid, binary):
 
             #  Get the list of all the digiit cases
             digitImages = extractDigits(inverted)
-
-            # Tests to check the number of digits recognized           
-            """cpt = 0
-            for digit in digitImages:
-                if(digit[3]):
-                    cpt+=1
-            print(cpt)"""
 
         except Exception as e:
             # cv2.destroyAllWindows()

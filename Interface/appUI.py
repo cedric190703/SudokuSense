@@ -7,6 +7,7 @@ import numpy as np
 import time
 import threading
 import tensorflow as tf
+import threading
 
 sys.path.append('./ImageProcess')
 sys.path.append('./Results')
@@ -118,14 +119,17 @@ class App(ctk.CTk):
         self.home_frame_large_image_label.grid(row=0, column=0, padx=20, pady=10)
 
         # Description of the process
-        self.description = ctk.CTkTextbox(master=self, width=225, height=65, corner_radius=0)
+        self.description = ctk.CTkTextbox(master=self, width=225, height=65,
+        corner_radius=0)
         
         # Set the text font and size
         self.description.configure(font=("Optima", 18))
 
         # Sentence that describes the process
-        self.description.insert("0.0", "Import an image and then press the start button to process the selected image.💻")
-        self.description.grid(row=7, column=0, padx=10, pady=10, sticky="ew", columnspan=2)
+        self.description.insert("0.0",
+        "Import an image and then press the start button to process the selected image.💻")
+        self.description.grid(row=7, column=0, padx=10,
+        pady=10, sticky="ew", columnspan=2)
         
         # Step to be situated in the process
         self.step = 0
@@ -166,7 +170,7 @@ class App(ctk.CTk):
         time.sleep(2)
 
         return binary
-
+    
     def findGrid(self, binary):
         # Find the contours on the binary image
         contours, _ = cv2.findContours(binary, 
@@ -245,11 +249,15 @@ class App(ctk.CTk):
 
         self.update_image(final_image)
     
+    # Define a timeout handler
+    def timeout_handler(self, timer):
+        self.update_text("Step6.0: Sudoku could not be solved.")
+
     # Function that take images and create the Sudoku grid
     def recognizeDigits(self, images):
         grid = [[0 for _ in range(9)] for _ in range(9)]
         L = len(images)
-
+        
         # Load the saved model
         model = tf.keras.models.load_model('model.h5')
 
@@ -259,18 +267,17 @@ class App(ctk.CTk):
             if images[i][3]:
                 # Resize and reshape the image
                 image = images[i][0]
-                image = Image.fromarray(image)
-                image = image.resize((28, 28))
+                image = cv2.resize(image, (28, 28))
                 image = np.array(image)
-                image = image.reshape(1, 28, 28, 1)
-                image = image / 255.0
+                image_digit = image.reshape(1, 28, 28, 1)  # Adjust the reshape dimensions
 
                 # Perform prediction using the loaded model
-                prediction = model.predict(image)[0]
-                predicted_digit = np.argmax(prediction)
+                prediction = np.argmax(model.predict(image_digit)[0])
 
                 # Assign the predicted digit to the corresponding grid cell
-                grid[y][x] = predicted_digit
+                cv2.imshow('digit', image)
+                grid[y][x] = prediction
+                print(prediction)
         
         return grid
     
@@ -325,14 +332,36 @@ class App(ctk.CTk):
             # Step 4 : Recognize digits
             self.update_text("Step4.0: Recognize digits.🤖")
             grid = self.recognizeDigits(images)
+            print(grid)
             time.sleep(2)
             
             if(self.paused):
                 return
-        
-            # Step 5 : Solve the Sudoku grid
+
+            # Set the timeout value (in seconds)
+            timeout = 8
+
+            # Create a Timer thread
+            timer = threading.Timer(timeout, self.timeout_handler)
+
+            # Step 5: Solve the Sudoku grid
             self.update_text("Step5.0: Solve the Sudoku grid.👌")
-            result = mainSolver(grid)
+            try:
+                # Start the timer
+                timer.start()
+
+                # Call the mainSolver function
+                result = mainSolver(grid)
+
+                # Cancel the timer if the function completes before the timeout
+                timer.cancel()
+
+            except TimeoutError:
+                # Handle the timeout error
+                self.update_text("Step6.0: Sudoku could not be solved.\n"
+                +"Click on the 'Result' button to see the grid recognized by the OCR.")
+                mainDraw(grid)
+                return
             
             if(self.paused):
                 return

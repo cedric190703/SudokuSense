@@ -14,28 +14,35 @@ def mainAI():
     # No need to clean this dataset
 
     # Preprocess the data
-    xTrain = xTrain.reshape(-1, 28, 28, 1) / 255.0
-    xTest = xTest.reshape(-1, 28, 28, 1) / 255.0
+    xTrain = xTrain.reshape((60000, 28, 28, 1)) / 255.0
+    xTest = xTest.reshape((10000, 28, 28, 1)) / 255.0
     yTrain = tf.keras.utils.to_categorical(yTrain, num_classes=10)
     yTest = tf.keras.utils.to_categorical(yTest, num_classes=10)
 
     # Create the CNN model
     model = tf.keras.Sequential([
-    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)), # Input layers
-    tf.keras.layers.MaxPooling2D((2, 2)),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(64, activation='relu'),
-    tf.keras.layers.Dense(10, activation='softmax') # Get the proba for the digits
+        tf.keras.layers.Conv2D(64, (3, 3), activation='relu', input_shape=(28, 28, 1)),
+        tf.keras.layers.Conv2D(32, 3, padding='same', activation='relu'),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Conv2D(16, 3, padding='same', activation='relu'),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Conv2D(64, 3, padding='same', activation='relu'),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dense(10, activation='sigmoid')
     ])
-
-    # Compile the model for the training and the 
+    
     # Compile the model
     model.compile(optimizer='adam',
-                loss='categorical_crossentropy', metrics=['accuracy'])
+    loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+    metrics=['accuracy'])
+
+    model.summary()
 
     # Train the model
-    trained = model.fit(xTrain, yTrain, batch_size=32, 
-                    epochs=7, validation_data=(xTest, yTest))
+    trained = model.fit(xTrain, yTrain, epochs=10,
+    validation_data=(xTest, yTest))
     
     # Get the plot from the data to show the accuracy of the model
     # Plot for the accuracy of the model

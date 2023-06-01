@@ -68,33 +68,23 @@ def backtracking(grid):
 # This function call the function that do the Backtracking algorithm
 # The grid is an array of size : (9 x 9)
 def mainSolver(grid):
-    n, _ = getLocation(grid)
-    # If the grid is full
-    if(n == -1):
+    if(correctGrid(grid)):
+        n, _ = getLocation(grid)
+
+        # If the grid is full
+        if(n == -1):
         # Check if the full grid is correct
-        if(correctGrid(grid)):
             return (1, grid)
+
+        # Try to get a solution
+        res,newGrid = backtracking(grid)
+        # Solution found
+        if(res):
+            return newGrid
         else:
-            return (0, grid)
-    res,newGrid = backtracking(grid)
-    # True is equal to 1
-    if(res):
-        return newGrid
+            return -1
+    
+    # The original grid is not valid
     else:
         return -1
-
-# Tests to performe the algorithm    
-""" grid =[[3, 0, 6, 5, 0, 8, 4, 0, 0],
-          [5, 2, 0, 0, 0, 0, 0, 0, 0],
-          [0, 8, 7, 0, 0, 0, 0, 3, 1],
-          [0, 0, 3, 0, 1, 0, 0, 8, 0],
-          [9, 0, 0, 8, 6, 3, 0, 0, 5],
-          [0, 5, 0, 0, 9, 0, 6, 0, 0],
-          [1, 3, 0, 0, 0, 0, 2, 5, 0],
-          [0, 0, 0, 0, 0, 0, 0, 7, 4],
-          [0, 0, 5, 2, 0, 6, 3, 0, 0]]
-
-start = time.time()
-print(mainSolver(grid))
-end = time.time()
-print("--- %s seconds ---" % (end - start)) """
+    
